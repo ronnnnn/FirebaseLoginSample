@@ -31,6 +31,16 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.TwitterAuthProvider;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+
+import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
@@ -42,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private GoogleApiClient googleApiClient;
     private CallbackManager callbackManager;
     private CoordinatorLayout rootCoordinatorLayout;
+    private TwitterLoginButton twitterLoginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +89,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         FacebookSdk.sdkInitialize(getApplicationContext());
 
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(getString(R.string.twitter_key),
+                getString(R.string.twitter_secret));
+        Fabric.with(this, new Twitter(authConfig));
+
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -85,14 +100,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         rootCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.root_coordinator_layout);
 
-        SignInButton signInButton = (SignInButton) findViewById(R.id.google_sign_in_button);
-        signInButton.setSize(SignInButton.SIZE_STANDARD);
-        signInButton.setOnClickListener(this);
+        SignInButton googleSignInButton = (SignInButton) findViewById(R.id.google_sign_in_button);
+        googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
+        googleSignInButton.setOnClickListener(this);
 
         callbackManager = CallbackManager.Factory.create();
-        final LoginButton loginButton = (LoginButton) findViewById(R.id.facebook_login_button);
-        loginButton.setReadPermissions("email", "public_profile");
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+        final LoginButton facebookLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
+        facebookLoginButton.setReadPermissions("email", "public_profile");
+        facebookLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 firebaseAuthWithFacebook(loginResult.getAccessToken());
@@ -105,6 +120,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             @Override
             public void onError(FacebookException error) {
                 error.printStackTrace();
+            }
+        });
+
+        twitterLoginButton = (TwitterLoginButton) findViewById(R.id.twitter_login_button);
+        twitterLoginButton.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                // The TwitterSession is also available through:
+                // Twitter.getInstance().core.getSessionManager().getActiveSession()
+                TwitterSession session = result.data;
+                // with your app's user model
+                firebaseAuthWithTwitter(session);
+            }
+            @Override
+            public void failure(TwitterException exception) {
+                exception.printStackTrace();
             }
         });
     }
@@ -127,6 +158,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+        // Make sure that the loginButton hears the result from any
+        // Activity that it triggered.
+        twitterLoginButton.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
@@ -195,6 +229,29 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         if (!task.isSuccessful()) {
                             Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
                                     Snackbar.LENGTH_SHORT).show();
+                        } else {
+                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
+                                    Snackbar.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void firebaseAuthWithTwitter(TwitterSession session) {
+        AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token,
+                session.getAuthToken().secret);
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
+                                    Snackbar.LENGTH_SHORT).show();
+                            task.getException().printStackTrace();
                         } else {
                             Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
                                     Snackbar.LENGTH_SHORT).show();
