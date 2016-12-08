@@ -32,6 +32,9 @@ dependencies {
     // google play service
     compile 'com.google.android.gms:play-services-auth:9.6.1'
 
+    // facebook
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
+
     // test
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
