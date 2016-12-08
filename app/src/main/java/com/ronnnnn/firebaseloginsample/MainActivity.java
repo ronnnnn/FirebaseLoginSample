@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         GoogleSignInOptions googleSignInOptions =
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.web_client_id))
                         .requestEmail()
                         .build();
 
@@ -143,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
                                     Snackbar.LENGTH_SHORT).show();
                         } else {
-
+                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
+                                    Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });
