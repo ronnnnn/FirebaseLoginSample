@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         View.OnClickListener {
 
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
+    static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
 
     private FirebaseAuth firebaseAuth;
     private FirebaseAuth.AuthStateListener authStateListener;
@@ -133,11 +134,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 // with your app's user model
                 firebaseAuthWithTwitter(session);
             }
+
             @Override
             public void failure(TwitterException exception) {
                 exception.printStackTrace();
             }
         });
+
+        findViewById(R.id.email_login_button).setOnClickListener(this);
     }
 
     @Override
@@ -162,9 +166,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // Activity that it triggered.
         twitterLoginButton.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN) {
+        if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN && resultCode == RESULT_OK) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInWithGoogleResult(result);
+        } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN && resultCode == RESULT_OK) {
+            firebaseAuthWithEmailAndPassword(data);
         }
     }
 
@@ -173,6 +179,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         switch (view.getId()) {
             case R.id.google_sign_in_button:
                 signInWithGoogle();
+                break;
+
+            case R.id.email_login_button:
+                startActivityForResult(FormActivity.createIntent(MainActivity.this), REQUEST_CODE_EMAIL_SIGN_IN);
                 break;
         }
     }
@@ -244,7 +254,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task task) {
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
+                                    Snackbar.LENGTH_SHORT).show();
+                            task.getException().printStackTrace();
+                        } else {
+                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
+                                    Snackbar.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
 
+    private void firebaseAuthWithEmailAndPassword(Intent data) {
+        firebaseAuth.createUserWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
+                data.getStringExtra(FormActivity.KEY_PASSWORD))
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
