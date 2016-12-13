@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 if (user != null) {
                     // User has already signed in
                     Bundle userInfoBundle = new Bundle();
-                    userInfoBundle.putString(ResultActivity.KEY_USER_NAME, user.getDisplayName());
+                    userInfoBundle.putString(ResultActivity.KEY_USER_UID, user.getUid());
                     userInfoBundle.putString(ResultActivity.KEY_USER_EMAIL, user.getEmail());
                     if (user.getProviders() != null) {
                         userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, user.getProviders().get(0));

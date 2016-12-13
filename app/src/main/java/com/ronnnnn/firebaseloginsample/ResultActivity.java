@@ -13,7 +13,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class ResultActivity extends AppCompatActivity implements View.OnClickListener {
 
     static final String KEY_USER_BUNDLE = "key_user_bundle";
-    static final String KEY_USER_NAME = "key_user_name";
+    static final String KEY_USER_UID = "key_user_uid";
     static final String KEY_USER_EMAIL = "key_user_email";
     static final String KEY_USER_PROVIDER = "key_user_provider";
 
@@ -28,17 +28,22 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         firebaseAuth  = FirebaseAuth.getInstance();
 
+        initializeViews();
+    }
+
+    private void initializeViews() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         Bundle userInfoBundle = getIntent().getBundleExtra(KEY_USER_BUNDLE);
-        String userName = userInfoBundle.getString(KEY_USER_NAME);
+        String userUid = userInfoBundle.getString(KEY_USER_UID);
         String userEmail = userInfoBundle.getString(KEY_USER_EMAIL);
         String userProvider = userInfoBundle.getString(KEY_USER_PROVIDER);
 
-        ((TextView) findViewById(R.id.user_name_text_view)).setText(userName);
+        ((TextView) findViewById(R.id.user_uid_text_view)).setText(userUid);
         ((TextView) findViewById(R.id.user_email_text_view)).setText(userEmail);
         ((TextView) findViewById(R.id.user_provider_text_view)).setText(userProvider);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
