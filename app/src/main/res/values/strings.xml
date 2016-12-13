@@ -7,4 +7,7 @@
     <string name="form_password">password</string>
     <string name="sign_up_with_email_and_password">sign up</string>
     <string name="sign_up_with_email_and_password_message">Fill follow forms and register your information.</string>
+    <string name="title_activity_result">ResultActivity</string>
+    <string name="sign_out">sign out</string>
+    <string name="unknown_user_provider">unknown</string>
 </resources>

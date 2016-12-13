@@ -45,6 +45,7 @@ import io.fabric.sdk.android.Fabric;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
     static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
 
@@ -66,9 +67,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    // User is signed in
-                } else {
-                    // User is signed out
+                    // User has already signed in
+                    Bundle userInfoBundle = new Bundle();
+                    userInfoBundle.putString(ResultActivity.KEY_USER_NAME, user.getDisplayName());
+                    userInfoBundle.putString(ResultActivity.KEY_USER_EMAIL, user.getEmail());
+                    if (user.getProviders() != null) {
+                        userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, user.getProviders().get(0));
+                    } else {
+                        userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, getString(R.string.unknown_user_provider));
+                    }
+                    startActivity(ResultActivity.createIntent(MainActivity.this, userInfoBundle));
+
+                    return;
                 }
             }
         };
