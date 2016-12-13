@@ -280,23 +280,44 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
 
     private void firebaseAuthWithEmailAndPassword(Intent data) {
-        firebaseAuth.createUserWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
-                data.getStringExtra(FormActivity.KEY_PASSWORD))
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                    Snackbar.LENGTH_SHORT).show();
-                            task.getException().printStackTrace();
-                        } else {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                    Snackbar.LENGTH_SHORT).show();
+        if (data.getBooleanExtra(FormActivity.KEY_HAS_ACCOUNT, true)) {
+            firebaseAuth.signInWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
+                    data.getStringExtra(FormActivity.KEY_PASSWORD))
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            // If sign in fails, display a message to the user. If sign in succeeds
+                            // the auth state listener will be notified and logic to handle the
+                            // signed in user can be handled in the listener.
+                            if (!task.isSuccessful()) {
+                                Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
+                                        Snackbar.LENGTH_SHORT).show();
+                                task.getException().printStackTrace();
+                            } else {
+                                Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
+                    });
+        } else {
+            firebaseAuth.createUserWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
+                    data.getStringExtra(FormActivity.KEY_PASSWORD))
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            // If sign in fails, display a message to the user. If sign in succeeds
+                            // the auth state listener will be notified and logic to handle the
+                            // signed in user can be handled in the listener.
+                            if (!task.isSuccessful()) {
+                                Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
+                                        Snackbar.LENGTH_SHORT).show();
+                                task.getException().printStackTrace();
+                            } else {
+                                Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+        }
     }
 }

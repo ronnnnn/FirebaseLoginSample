@@ -10,4 +10,5 @@
     <string name="title_activity_result">ResultActivity</string>
     <string name="sign_out">sign out</string>
     <string name="unknown_user_provider">unknown</string>
+    <string name="sign_in_with_email_and_password">sign in</string>
 </resources>
