@@ -7,6 +7,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.AccessToken;
@@ -38,6 +39,7 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import io.fabric.sdk.android.Fabric;
@@ -257,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 });
     }
 
-    private void firebaseAuthWithTwitter(TwitterSession session) {
+    private void firebaseAuthWithTwitter(final TwitterSession session) {
         AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token,
                 session.getAuthToken().secret);
         firebaseAuth.signInWithCredential(credential)
@@ -274,6 +276,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         } else {
                             Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
                                     Snackbar.LENGTH_SHORT).show();
+
+                            TwitterAuthClient authClient = new TwitterAuthClient();
+                            authClient.requestEmail(session, new Callback<String>() {
+                                @Override
+                                public void success(Result<String> result) {
+                                    Log.d("", result.data);
+                                }
+
+                                @Override
+                                public void failure(TwitterException exception) {
+                                    exception.printStackTrace();
+                                }
+                            });
                         }
                     }
                 });
