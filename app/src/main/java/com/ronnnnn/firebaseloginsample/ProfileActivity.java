@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GithubAuthProvider;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
 import com.twitter.sdk.android.Twitter;
@@ -41,7 +40,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         GOOGLE(GoogleAuthProvider.PROVIDER_ID),
         FACEBOOK(FacebookAuthProvider.PROVIDER_ID),
         TWITTER(TwitterAuthProvider.PROVIDER_ID),
-        GITHUB(GithubAuthProvider.PROVIDER_ID),
         EMAIL(EmailAuthProvider.PROVIDER_ID);
 
         private final String providerId;
