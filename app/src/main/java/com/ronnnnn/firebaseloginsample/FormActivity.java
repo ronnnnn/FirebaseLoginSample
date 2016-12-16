@@ -10,6 +10,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+/**
+ * Users can login or sign up with filling two forms (email and password) in this Activity.
+ */
 public class FormActivity extends AppCompatActivity implements View.OnClickListener {
 
     static final String KEY_EMAIL = "key_email";
@@ -59,6 +62,8 @@ public class FormActivity extends AppCompatActivity implements View.OnClickListe
             }
             setResult(RESULT_OK, data);
             finish();
+        } else {
+            DialogManager.createDialog(FormActivity.this, getString(R.string.dialog_error_form));
         }
     }
 }

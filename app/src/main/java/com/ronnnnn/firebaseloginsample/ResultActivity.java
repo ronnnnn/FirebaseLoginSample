@@ -10,6 +10,10 @@ import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ * This Activity shows current login user profile.
+ * Users can sign out if they push the button.
+ */
 public class ResultActivity extends AppCompatActivity implements View.OnClickListener {
 
     static final String KEY_USER_BUNDLE = "key_user_bundle";

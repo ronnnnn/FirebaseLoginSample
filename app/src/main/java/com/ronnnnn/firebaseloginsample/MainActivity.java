@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -23,6 +22,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -44,15 +44,18 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import io.fabric.sdk.android.Fabric;
 
+/**
+ * This Activity shows providers users can login or sign up and handle authentication
+ * when users push each buttons with using firebase.
+ */
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener {
+        View.OnClickListener, FirebaseAuth.AuthStateListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
     static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
 
     private FirebaseAuth firebaseAuth;
-    private FirebaseAuth.AuthStateListener authStateListener;
     private GoogleApiClient googleApiClient;
     private CallbackManager callbackManager;
     private CoordinatorLayout rootCoordinatorLayout;
@@ -62,28 +65,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // get firebase instance
         firebaseAuth = FirebaseAuth.getInstance();
-
-        authStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User has already signed in
-                    Bundle userInfoBundle = new Bundle();
-                    userInfoBundle.putString(ResultActivity.KEY_USER_UID, user.getUid());
-                    userInfoBundle.putString(ResultActivity.KEY_USER_EMAIL, user.getEmail());
-                    if (user.getProviders() != null) {
-                        userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, user.getProviders().get(0));
-                    } else {
-                        userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, getString(R.string.unknown_user_provider));
-                    }
-                    startActivity(ResultActivity.createIntent(MainActivity.this, userInfoBundle));
-
-                    return;
-                }
-            }
-        };
 
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
@@ -108,19 +91,50 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         setContentView(R.layout.activity_main);
 
+        initializeViews();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        firebaseAuth.addAuthStateListener(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        firebaseAuth.removeAuthStateListener(this);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInWithGoogleResult(result);
+        } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN) {
+            firebaseAuthWithEmailAndPassword(data);
+        } else {
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+            twitterLoginButton.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void initializeViews() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         rootCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.root_coordinator_layout);
 
+        // initialize google sign in button
         SignInButton googleSignInButton = (SignInButton) findViewById(R.id.google_sign_in_button);
         googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
         googleSignInButton.setOnClickListener(this);
 
+        // initialize facebook login button
         callbackManager = CallbackManager.Factory.create();
-        final LoginButton facebookLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
-        facebookLoginButton.setReadPermissions("email", "public_profile");
-        facebookLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+        FacebookCallback<LoginResult> facebookLoginCallback = new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 firebaseAuthWithFacebook(loginResult.getAccessToken());
@@ -132,12 +146,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
             @Override
             public void onError(FacebookException error) {
-                error.printStackTrace();
+                if (error != null) {
+                    DialogManager.createDialog(MainActivity.this, error.getMessage()).show();
+                }
             }
-        });
+        };
+        LoginButton facebookLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
+        facebookLoginButton.setReadPermissions("email", "public_profile");
+        facebookLoginButton.registerCallback(callbackManager, facebookLoginCallback);
 
-        twitterLoginButton = (TwitterLoginButton) findViewById(R.id.twitter_login_button);
-        twitterLoginButton.setCallback(new Callback<TwitterSession>() {
+        // initialize twitter login button
+        Callback<TwitterSession> twitterLoginCallback = new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
                 // The TwitterSession is also available through:
@@ -149,59 +168,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
             @Override
             public void failure(TwitterException exception) {
-                exception.printStackTrace();
+                if (exception != null) {
+                    DialogManager.createDialog(MainActivity.this, exception.getMessage()).show();
+                }
             }
-        });
+        };
+        twitterLoginButton = (TwitterLoginButton) findViewById(R.id.twitter_login_button);
+        twitterLoginButton.setCallback(twitterLoginCallback);
 
         findViewById(R.id.email_login_button).setOnClickListener(this);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        firebaseAuth.addAuthStateListener(authStateListener);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (authStateListener != null) {
-            firebaseAuth.removeAuthStateListener(authStateListener);
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-        // Make sure that the loginButton hears the result from any
-        // Activity that it triggered.
-        twitterLoginButton.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN && resultCode == RESULT_OK) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInWithGoogleResult(result);
-        } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN && resultCode == RESULT_OK) {
-            firebaseAuthWithEmailAndPassword(data);
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.google_sign_in_button:
-                signInWithGoogle();
-                break;
-
-            case R.id.email_login_button:
-                startActivityForResult(FormActivity.createIntent(MainActivity.this), REQUEST_CODE_EMAIL_SIGN_IN);
-                break;
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 
     private void signInWithGoogle() {
@@ -216,6 +191,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             firebaseAuthWithGoogle(account);
         } else {
             // failed sign in
+            DialogManager.createDialog(MainActivity.this,
+                    CommonStatusCodes.getStatusCodeString(result.getStatus().getStatusCode()))
+                    .show();
         }
     }
 
@@ -228,12 +206,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                    Snackbar.LENGTH_SHORT).show();
-                        } else {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                    Snackbar.LENGTH_SHORT).show();
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                                    .show();
                         }
                     }
                 });
@@ -248,12 +223,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                    Snackbar.LENGTH_SHORT).show();
-                        } else {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                    Snackbar.LENGTH_SHORT).show();
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                                    .show();
                         }
                     }
                 });
@@ -269,14 +241,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                    Snackbar.LENGTH_SHORT).show();
-                            task.getException().printStackTrace();
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                                    .show();
                         } else {
-                            Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                    Snackbar.LENGTH_SHORT).show();
-
                             TwitterAuthClient authClient = new TwitterAuthClient();
                             authClient.requestEmail(session, new Callback<String>() {
                                 @Override
@@ -304,13 +272,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
                             // signed in user can be handled in the listener.
-                            if (!task.isSuccessful()) {
-                                Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                        Snackbar.LENGTH_SHORT).show();
-                                task.getException().printStackTrace();
-                            } else {
-                                Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                        Snackbar.LENGTH_SHORT).show();
+                            if (!task.isSuccessful() && task.getException() != null) {
+                                DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                                        .show();
                             }
                         }
                     });
@@ -323,16 +287,53 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
                             // signed in user can be handled in the listener.
-                            if (!task.isSuccessful()) {
-                                Snackbar.make(rootCoordinatorLayout, "Authentication failed.",
-                                        Snackbar.LENGTH_SHORT).show();
-                                task.getException().printStackTrace();
-                            } else {
-                                Snackbar.make(rootCoordinatorLayout, "Authentication succeed.",
-                                        Snackbar.LENGTH_SHORT).show();
+                            if (!task.isSuccessful() && task.getException() != null) {
+                                DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                                        .show();
                             }
                         }
                     });
         }
+    }
+
+    /**
+     * check auth state
+     * this method is called when auth state is changed, the listener is registered and user's token is changed
+     *
+     * @param firebaseAuth
+     */
+    @Override
+    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            // User has already signed in
+            Bundle userInfoBundle = new Bundle();
+            userInfoBundle.putString(ResultActivity.KEY_USER_UID, user.getUid());
+            userInfoBundle.putString(ResultActivity.KEY_USER_EMAIL, user.getEmail());
+            if (user.getProviders() != null) {
+                userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, user.getProviders().get(0));
+            } else {
+                userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, getString(R.string.unknown_user_provider));
+            }
+            startActivity(ResultActivity.createIntent(MainActivity.this, userInfoBundle));
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.google_sign_in_button:
+                signInWithGoogle();
+                break;
+
+            case R.id.email_login_button:
+                startActivityForResult(FormActivity.createIntent(MainActivity.this), REQUEST_CODE_EMAIL_SIGN_IN);
+                break;
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        DialogManager.createDialog(MainActivity.this, connectionResult.getErrorMessage()).show();
     }
 }
