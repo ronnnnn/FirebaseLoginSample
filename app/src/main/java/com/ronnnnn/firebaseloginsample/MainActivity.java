@@ -3,10 +3,8 @@ package com.ronnnnn.firebaseloginsample;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 
 import com.facebook.AccessToken;
@@ -40,7 +38,6 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import io.fabric.sdk.android.Fabric;
@@ -52,7 +49,6 @@ import io.fabric.sdk.android.Fabric;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener, FirebaseAuth.AuthStateListener {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
     private static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
     private static final int REQUEST_CODE_PROFILE = 102;
@@ -60,7 +56,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private FirebaseAuth firebaseAuth;
     private GoogleApiClient googleApiClient;
     private CallbackManager callbackManager;
-    private CoordinatorLayout rootCoordinatorLayout;
     private TwitterLoginButton twitterLoginButton;
 
     @Override
@@ -128,8 +123,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private void initializeViews() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        rootCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.root_coordinator_layout);
 
         // initialize google sign in button
         SignInButton googleSignInButton = (SignInButton) findViewById(R.id.google_sign_in_button);
@@ -218,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 });
     }
 
-    private void firebaseAuthWithFacebook(final AccessToken token) {
+    private void firebaseAuthWithFacebook(AccessToken token) {
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         firebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -235,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 });
     }
 
-    private void firebaseAuthWithTwitter(final TwitterSession session) {
+    private void firebaseAuthWithTwitter(TwitterSession session) {
         AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token,
                 session.getAuthToken().secret);
         firebaseAuth.signInWithCredential(credential)
@@ -248,19 +241,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         if (!task.isSuccessful() && task.getException() != null) {
                             DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
                                     .show();
-                        } else {
-                            TwitterAuthClient authClient = new TwitterAuthClient();
-                            authClient.requestEmail(session, new Callback<String>() {
-                                @Override
-                                public void success(Result<String> result) {
-                                    Log.d("", result.data);
-                                }
-
-                                @Override
-                                public void failure(TwitterException exception) {
-                                    exception.printStackTrace();
-                                }
-                            });
                         }
                     }
                 });

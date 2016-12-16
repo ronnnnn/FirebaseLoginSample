@@ -14,6 +14,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GithubAuthProvider;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 
 /**
  * This Activity shows current login user profile.
@@ -72,9 +78,27 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         userProvider = userInfoBundle.getString(KEY_USER_PROVIDER);
 
         ((TextView) findViewById(R.id.user_uid_text_view)).setText(userUid);
-        ((TextView) findViewById(R.id.user_email_text_view)).setText(userEmail);
+        final TextView userEmailTextView = (TextView) findViewById(R.id.user_email_text_view);
+        userEmailTextView.setText(userEmail);
         ((TextView) findViewById(R.id.user_provider_text_view)).setText(userProvider);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
+
+        if (userProvider.equals(Provider.TWITTER.getProviderId())) {
+            TwitterSession session = Twitter.getSessionManager().getActiveSession();
+            TwitterAuthClient authClient = new TwitterAuthClient();
+            authClient.requestEmail(session, new Callback<String>() {
+                @Override
+                public void success(Result<String> result) {
+                    userEmailTextView.setText(result.data);
+                }
+
+                @Override
+                public void failure(TwitterException exception) {
+                    DialogManager.createDialog(ProfileActivity.this, exception.getMessage()).show();
+                }
+            });
+        }
+
     }
 
     @Override
