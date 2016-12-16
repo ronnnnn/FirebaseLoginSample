@@ -1,16 +1,21 @@
 <resources>
     <string name="app_name">FirebaseLoginSample</string>
-    <string name="action_settings">Settings</string>
+
+    <!-- Main Activity -->
     <string name="login_with_email_and_password">login with email and password</string>
-    <string name="title_activity_form">FormActivity</string>
+
+    <!-- Form Activity -->
     <string name="form_email">email</string>
     <string name="form_password">password</string>
+    <string name="sign_in_with_email_and_password">sign in</string>
     <string name="sign_up_with_email_and_password">sign up</string>
     <string name="sign_up_with_email_and_password_message">Fill follow forms and register your information.</string>
-    <string name="title_activity_result">ResultActivity</string>
+
+    <!-- Profile Activity-->
     <string name="sign_out">sign out</string>
     <string name="unknown_user_provider">unknown</string>
-    <string name="sign_in_with_email_and_password">sign in</string>
+
+    <!-- Dialog -->
     <string name="dialog_close">close</string>
     <string name="dialog_error_form">Please fill both forms.</string>
 </resources>
