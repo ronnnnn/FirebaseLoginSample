@@ -247,6 +247,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
 
     private void firebaseAuthWithEmailAndPassword(Intent data) {
+        if (data == null) {
+            return;
+        }
+
         if (data.getBooleanExtra(FormActivity.KEY_HAS_ACCOUNT, true)) {
             firebaseAuth.signInWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
                     data.getStringExtra(FormActivity.KEY_PASSWORD))
