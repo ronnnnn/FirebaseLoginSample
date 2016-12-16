@@ -39,3 +39,6 @@ import-summary.txt
 #.idea/workspace.xml - remove # and delete .idea if it better suit your needs.
 .gradle
 build/
+
+# keys
+/app/src/main/res/values/keys.xml
