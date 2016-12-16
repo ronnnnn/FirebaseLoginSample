@@ -19,4 +19,16 @@ class DialogManager {
         });
         return alertDialog.create();
     }
+
+    static AlertDialog createDialog(Context context, Throwable throwable) {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+        alertDialog.setMessage(throwable.getMessage());
+        alertDialog.setPositiveButton(R.string.dialog_close, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int id) {
+                dialogInterface.dismiss();
+            }
+        });
+        return alertDialog.create();
+    }
 }

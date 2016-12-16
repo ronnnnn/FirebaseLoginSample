@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             firebaseAuthWithEmailAndPassword(data);
         } else if (requestCode == REQUEST_CODE_PROFILE && resultCode == RESULT_OK) {
             logoutFacebook();
-        } else  {
+        } else {
             callbackManager.onActivityResult(requestCode, resultCode, data);
             twitterLoginButton.onActivityResult(requestCode, resultCode, data);
         }
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             @Override
             public void onError(FacebookException error) {
                 if (error != null) {
-                    DialogManager.createDialog(MainActivity.this, error.getMessage()).show();
+                    DialogManager.createDialog(MainActivity.this, error).show();
                 }
             }
         };
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             @Override
             public void failure(TwitterException exception) {
                 if (exception != null) {
-                    DialogManager.createDialog(MainActivity.this, exception.getMessage()).show();
+                    DialogManager.createDialog(MainActivity.this, exception).show();
                 }
             }
         };
@@ -203,8 +203,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                        if (!task.isSuccessful()) {
+                            DialogManager.createDialog(MainActivity.this, task.getException())
                                     .show();
                         }
                     }
@@ -220,8 +220,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                        if (!task.isSuccessful()) {
+                            DialogManager.createDialog(MainActivity.this, task.getException())
                                     .show();
                         }
                     }
@@ -238,8 +238,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                        if (!task.isSuccessful()) {
+                            DialogManager.createDialog(MainActivity.this, task.getException())
                                     .show();
                         }
                     }
@@ -256,8 +256,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
                             // signed in user can be handled in the listener.
-                            if (!task.isSuccessful() && task.getException() != null) {
-                                DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                            if (!task.isSuccessful()) {
+                                DialogManager.createDialog(MainActivity.this, task.getException())
                                         .show();
                             }
                         }
@@ -271,8 +271,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
                             // signed in user can be handled in the listener.
-                            if (!task.isSuccessful() && task.getException() != null) {
-                                DialogManager.createDialog(MainActivity.this, task.getException().getMessage())
+                            if (!task.isSuccessful()) {
+                                DialogManager.createDialog(MainActivity.this, task.getException())
                                         .show();
                             }
                         }

@@ -94,7 +94,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
                 @Override
                 public void failure(TwitterException exception) {
-                    DialogManager.createDialog(ProfileActivity.this, exception.getMessage()).show();
+                    DialogManager.createDialog(ProfileActivity.this, exception).show();
                 }
             });
         }
