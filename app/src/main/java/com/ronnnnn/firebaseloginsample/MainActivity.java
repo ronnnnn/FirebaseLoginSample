@@ -14,6 +14,7 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
@@ -53,7 +54,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
-    static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
+    private static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
+    private static final int REQUEST_CODE_PROFILE = 102;
 
     private FirebaseAuth firebaseAuth;
     private GoogleApiClient googleApiClient;
@@ -115,7 +117,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             handleSignInWithGoogleResult(result);
         } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN) {
             firebaseAuthWithEmailAndPassword(data);
-        } else {
+        } else if (requestCode == REQUEST_CODE_PROFILE && resultCode == RESULT_OK) {
+            logoutFacebook();
+        } else  {
             callbackManager.onActivityResult(requestCode, resultCode, data);
             twitterLoginButton.onActivityResult(requestCode, resultCode, data);
         }
@@ -296,6 +300,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
+    private void logoutFacebook() {
+        LoginManager.getInstance().logOut();
+    }
+
     /**
      * check auth state
      * this method is called when auth state is changed, the listener is registered and user's token is changed
@@ -308,14 +316,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         if (user != null) {
             // User has already signed in
             Bundle userInfoBundle = new Bundle();
-            userInfoBundle.putString(ResultActivity.KEY_USER_UID, user.getUid());
-            userInfoBundle.putString(ResultActivity.KEY_USER_EMAIL, user.getEmail());
-            if (user.getProviders() != null) {
-                userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, user.getProviders().get(0));
+            userInfoBundle.putString(ProfileActivity.KEY_USER_UID, user.getUid());
+            userInfoBundle.putString(ProfileActivity.KEY_USER_EMAIL, user.getEmail());
+            if (user.getProviders() != null && !user.getProviders().isEmpty()) {
+                userInfoBundle.putString(ProfileActivity.KEY_USER_PROVIDER, user.getProviders().get(0));
             } else {
-                userInfoBundle.putString(ResultActivity.KEY_USER_PROVIDER, getString(R.string.unknown_user_provider));
+                userInfoBundle.putString(ProfileActivity.KEY_USER_PROVIDER, getString(R.string.unknown_user_provider));
             }
-            startActivity(ResultActivity.createIntent(MainActivity.this, userInfoBundle));
+            startActivityForResult(ProfileActivity.createIntent(MainActivity.this, userInfoBundle), REQUEST_CODE_PROFILE);
         }
     }
 
