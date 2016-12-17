@@ -1,9 +1,3 @@
-apply plugin: 'io.balto'
-
-balto {
-    repositoryName = {'ronnnnn/FirebaseLoginSample'}
-}
-
 buildscript {
     repositories {
         maven { url 'https://maven.fabric.io/public' }
@@ -59,11 +53,6 @@ dependencies {
     // twitter
     compile('com.twitter.sdk.android:twitter:2.2.0@aar') {
         transitive = true;
-    }
-
-    // Balto
-    compile('io.balto:balto-sdk:1.0.7@aar') {
-        transitive = true
     }
 
     // test
