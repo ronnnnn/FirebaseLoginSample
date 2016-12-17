@@ -47,7 +47,7 @@ import io.fabric.sdk.android.Fabric;
  * when users push each buttons with using firebase.
  */
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener, FirebaseAuth.AuthStateListener {
+        View.OnClickListener, FirebaseAuth.AuthStateListener, OnCompleteListener<AuthResult> {
 
     private static final int REQUEST_CODE_GOOGLE_SIGN_IN = 100;
     private static final int REQUEST_CODE_EMAIL_SIGN_IN = 101;
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInWithGoogleResult(result);
-        } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN) {
+        } else if (requestCode == REQUEST_CODE_EMAIL_SIGN_IN && data != null) {
             firebaseAuthWithEmailAndPassword(data);
         } else if (requestCode == REQUEST_CODE_PROFILE && resultCode == RESULT_OK) {
             logoutFacebook();
@@ -197,90 +197,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            DialogManager.createDialog(MainActivity.this, task.getException())
-                                    .show();
-                        }
-                    }
-                });
+                .addOnCompleteListener(this, this);
     }
 
     private void firebaseAuthWithFacebook(AccessToken token) {
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            DialogManager.createDialog(MainActivity.this, task.getException())
-                                    .show();
-                        }
-                    }
-                });
+                .addOnCompleteListener(this, this);
     }
 
     private void firebaseAuthWithTwitter(TwitterSession session) {
         AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token,
                 session.getAuthToken().secret);
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            DialogManager.createDialog(MainActivity.this, task.getException())
-                                    .show();
-                        }
-                    }
-                });
+                .addOnCompleteListener(this, this);
     }
 
     private void firebaseAuthWithEmailAndPassword(Intent data) {
-        if (data == null) {
-            return;
-        }
-
         if (data.getBooleanExtra(FormActivity.KEY_HAS_ACCOUNT, true)) {
             firebaseAuth.signInWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
                     data.getStringExtra(FormActivity.KEY_PASSWORD))
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            // If sign in fails, display a message to the user. If sign in succeeds
-                            // the auth state listener will be notified and logic to handle the
-                            // signed in user can be handled in the listener.
-                            if (!task.isSuccessful()) {
-                                DialogManager.createDialog(MainActivity.this, task.getException())
-                                        .show();
-                            }
-                        }
-                    });
+                    .addOnCompleteListener(this, this);
         } else {
             firebaseAuth.createUserWithEmailAndPassword(data.getStringExtra(FormActivity.KEY_EMAIL),
                     data.getStringExtra(FormActivity.KEY_PASSWORD))
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            // If sign in fails, display a message to the user. If sign in succeeds
-                            // the auth state listener will be notified and logic to handle the
-                            // signed in user can be handled in the listener.
-                            if (!task.isSuccessful()) {
-                                DialogManager.createDialog(MainActivity.this, task.getException())
-                                        .show();
-                            }
-                        }
-                    });
+                    .addOnCompleteListener(this, this);
         }
     }
 
@@ -327,5 +268,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         DialogManager.createDialog(MainActivity.this, connectionResult.getErrorMessage()).show();
+    }
+
+    @Override
+    public void onComplete(@NonNull Task<AuthResult> task) {
+        if (!task.isSuccessful()) {
+            DialogManager.createDialog(MainActivity.this, task.getException())
+                    .show();
+        }
     }
 }
