@@ -12,6 +12,9 @@ Please make issues or pull requests when you find some problems in this app.
 
 Thank you.
 
+# Sample Application
+You can get sample application from [DeployGate](https://dply.me/nxi3qc). You also need to install DeployGate Application.
+
 # References
 - [Firebase Documentations](https://firebase.google.com/docs/)
 - [Firebase Authentication Documentations](https://firebase.google.com/docs/auth/)
